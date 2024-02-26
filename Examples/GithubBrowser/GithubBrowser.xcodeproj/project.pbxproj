@@ -33,6 +33,8 @@
 		3A19B38B2B80A610005D1F0A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A19B32D2B809AFF005D1F0A /* Assets.xcassets */; };
 		3A4D6C4D2B8C1E7D00A1FE98 /* SiestaExt in Frameworks */ = {isa = PBXBuildFile; productRef = 3A4D6C4C2B8C1E7D00A1FE98 /* SiestaExt */; };
 		3A4D6C4F2B8C1E8600A1FE98 /* SiestaExt in Frameworks */ = {isa = PBXBuildFile; productRef = 3A4D6C4E2B8C1E8600A1FE98 /* SiestaExt */; };
+		3A4D6C5A2B8C343000A1FE98 /* SampleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4D6C592B8C343000A1FE98 /* SampleViews.swift */; };
+		3A4D6C5B2B8C343000A1FE98 /* SampleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4D6C592B8C343000A1FE98 /* SampleViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +56,7 @@
 		3A19B3612B80A31C005D1F0A /* GithubBrowserMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GithubBrowserMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A19B36C2B80A31D005D1F0A /* GithubBrowserMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GithubBrowserMac.entitlements; sourceTree = "<group>"; };
 		3A4D6C4B2B8C1E3F00A1FE98 /* siestaext */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = siestaext; path = ../..; sourceTree = "<group>"; };
+		3A4D6C592B8C343000A1FE98 /* SampleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +109,7 @@
 				3A19B32D2B809AFF005D1F0A /* Assets.xcassets */,
 				3A19B36C2B80A31D005D1F0A /* GithubBrowserMac.entitlements */,
 				3A19B3212B809A14005D1F0A /* Preview Content */,
+				3A4D6C592B8C343000A1FE98 /* SampleViews.swift */,
 			);
 			path = GithubBrowser;
 			sourceTree = "<group>";
@@ -264,6 +268,7 @@
 				3A19B3752B80A34C005D1F0A /* LoginView.swift in Sources */,
 				3A19B37F2B80A354005D1F0A /* SearchResults.swift in Sources */,
 				3A19B3702B80A34C005D1F0A /* RepositoryListView.swift in Sources */,
+				3A4D6C5A2B8C343000A1FE98 /* SampleViews.swift in Sources */,
 				3A19B3712B80A34C005D1F0A /* AvatarView.swift in Sources */,
 				3A19B3742B80A34C005D1F0A /* UserView.swift in Sources */,
 				3A19B3732B80A34C005D1F0A /* RepositoryView.swift in Sources */,
@@ -282,6 +287,7 @@
 				3A19B37B2B80A34D005D1F0A /* LoginView.swift in Sources */,
 				3A19B3842B80A354005D1F0A /* SearchResults.swift in Sources */,
 				3A19B3762B80A34D005D1F0A /* RepositoryListView.swift in Sources */,
+				3A4D6C5B2B8C343000A1FE98 /* SampleViews.swift in Sources */,
 				3A19B3772B80A34D005D1F0A /* AvatarView.swift in Sources */,
 				3A19B37A2B80A34D005D1F0A /* UserView.swift in Sources */,
 				3A19B3792B80A34D005D1F0A /* RepositoryView.swift in Sources */,
@@ -329,6 +335,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -390,6 +397,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -425,7 +433,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -456,7 +464,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -481,6 +489,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"GithubBrowser/Preview Content\"";
 				DEVELOPMENT_TEAM = 8J742KCLC4;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -510,6 +519,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"GithubBrowser/Preview Content\"";
 				DEVELOPMENT_TEAM = 8J742KCLC4;
 				ENABLE_HARDENED_RUNTIME = YES;

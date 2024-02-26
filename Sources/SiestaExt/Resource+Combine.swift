@@ -56,6 +56,25 @@ extension TypedResourceProtocol {
     }
 }
 
+extension Resource {
+    /// See ``TypedResourceProtocol.statePublisher()``
+    public func statePublisher<T>() -> ResourceStatePublisher<T> {
+        typed().statePublisher()
+    }
+
+    /// See ``TypedResourceProtocol.contentPublisher()``
+    public func contentPublisher<T>() -> AnyPublisher<T, Never> {
+        typed().contentPublisher()
+    }
+
+    /// See ``TypedResourceProtocol.optionalContentPublisher()``
+    public func optionalContentPublisher<T>() -> AnyPublisher<T?, Never> {
+        typed().optionalContentPublisher()
+    }
+
+}
+
+
 // MARK: - Requests
 
 extension Resource {
