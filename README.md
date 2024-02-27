@@ -112,7 +112,7 @@ repoName)) { (repo: Repository?) in
 }
 ```
 
-### Get a spinner, error reporting and a retry button almost for free
+### Get a spinner, error reporting and a retry button with (almost) no effort
 
 By making a tiny change you can have all of these things:
 
