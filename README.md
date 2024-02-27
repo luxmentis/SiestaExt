@@ -9,14 +9,25 @@ Combine publishers, `@ObservableObject`... oh yes, and SwiftUI.
 
 ## Features
 
-- Easily use resources in SwiftUI
+- Easily use Siesta with SwiftUI
 - Combine publishers for resources and requests
 - A typed wrapper for Resource (😱 controversial!) for clearer APIs
+
+
+## Project status
+
+🔴 Not quite ready yet 🔴  The code should be pretty stable, but 
+- in-code documentation still to come (use this README for now)
+- tests need some attention
+- more docs in general
+- other non-code stuff
+
+
 
 ## Examples
 
 Read on, or jump straight into the GithubBrowser example app – it's the
-original Siesta example app rewritten in SwiftUI. It's a thing of beauty.
+original Siesta example app rewritten in SwiftUI, and it's a thing of beauty :-)
 
 ### First off, understand `TypedResource`
 
@@ -191,10 +202,10 @@ struct MultipleSampleView: View {
 }
 ```
 
-### More control, less magic
+### Want more control, less magic?
 
 If you want to do something more complex, or create your own building blocks,
-or you're an MVVM hound and the
+or if you're an MVVM hound and the
 examples above are giving you conniptions with their lack of model objects,
 you can step down a level:
 
@@ -217,7 +228,7 @@ the `Resource` until you unsubscribe.
 
 #### ObservableResource
 
-`someTypedResource.observable()` gives you `ObservableResource`, an
+Calling `someTypedResource.observable()` gives you `ObservableResource`, an
 `ObservableObject` that publishes resource state.
 
 This makes a good `@ObservedObject` in your views, for example.
@@ -227,3 +238,10 @@ This makes a good `@ObservedObject` in your views, for example.
 
 If you like Combine, `Resource` has request publisher methods, and there are
 publishers available directly on `Request` too.
+
+
+### How about UIKit?
+
+You could use this project's publishers along with CombineCocoa. There are 
+examples of that in 
+[this archived Siesta fork](https://github.com/luxmentis/Siesta).
