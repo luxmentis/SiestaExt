@@ -219,7 +219,7 @@ progress:
   you'll be interested in (`latestError`, etc), plus typed content.
 - `contentPublisher()` outputs content when there is some; it's convenient
   if you don't care about the rest of the state
-- `optionalPublisher()` is the same but outputs `nil` to let you know
+- `optionalContentPublisher()` is the same but outputs `nil` to let you know
   there's no content yet
 
 Subscribing to a publisher triggers `loadIfNeeded()`, and retains
