@@ -66,6 +66,8 @@ public class ResourceStatusModel: ObservableObject {
      spinner whenever you're reloading, while [.error, .allData, .loading] favours showing whatever data you have -
      stale or not.
 
+     There are some convenient rule sets defined on Array<ResourceStatusModel.Rule> which you might find useful.
+
      Adapted from SiestaUI (which is only for iOS).
      */
     public enum Rule: String {
