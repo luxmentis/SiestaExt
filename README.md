@@ -17,7 +17,6 @@ Combine publishers, `@ObservableObject`... oh yes, and SwiftUI.
 ## Project status
 
 🔴 Not quite ready yet 🔴  The code should be pretty stable, but 
-- in-code documentation still to come (use this README for now)
 - tests need some attention
 - more docs in general
 - other non-code stuff
