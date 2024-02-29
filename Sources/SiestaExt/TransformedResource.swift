@@ -1,5 +1,14 @@
 import Siesta
 
+/**
+ Lets you transform a resource's content to some other form. Because it's a TypedResourceProtocol, you can
+ use it with ResourceView, ObservableResource, etc.
+
+ Useful if your API class wants to present a particular resource to the rest of the app in multiple different
+ ways (so you can't just use a normal Siesta transformer) - perhaps because the API isn't how you'd like it to be.
+
+ You might consider this a dirty hack, in which case don't use it :-)
+ */
 public struct TransformedResource<FromType, ToType>: TypedResourceProtocol {
     public typealias T = ToType
 

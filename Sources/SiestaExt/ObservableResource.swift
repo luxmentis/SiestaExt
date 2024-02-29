@@ -1,6 +1,10 @@
 import SwiftUI
 import Siesta
 
+/**
+ An ObservableObject that publishes a resource's state. Makes a good @ObservedObject if you want to
+ operate at that level.
+ */
 public class ObservableResource<T>: ObservableObject, Equatable, Hashable {
     let resource: any TypedResourceProtocol<T>
     @Published public private(set) var state: ResourceState<T>?

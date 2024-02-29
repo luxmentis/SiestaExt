@@ -14,11 +14,12 @@ public struct ResourceStatePublisher<T>: Publisher {
 
 extension Publisher {
 
+    /// See ``TypedResourceProtocol.contentPublisher()``
     public func content<T>() -> AnyPublisher<T, Failure> where Output == ResourceState<T> {
         compactMap { $0.content }.eraseToAnyPublisher()
     }
 
-    /// See `Resource.optionalContentPublisher()`
+    /// See ``TypedResourceProtocol.optionalContentPublisher()``
     public func optionalContent<T>() -> AnyPublisher<T?, Failure> where Output == ResourceState<T> {
         compactMap { $0.content }.eraseToAnyPublisher()
     }

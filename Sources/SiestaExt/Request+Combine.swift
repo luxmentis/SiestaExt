@@ -4,10 +4,13 @@ import Foundation
 
 extension Request {
     /**
-    Be cautious with these methods - Requests are started when they're created, so we're effectively creating hot observables here.
-    Consider using the `Resource.*requestPublisher()` methods, which produce cold observables - requests won't start until subscription time.
+    Be cautious with these methods - Requests are started when they're created, so we're effectively
+    creating hot observables here.
+    Consider using the `Resource.*requestPublisher()` methods, which produce cold observables -
+    requests won't start until subscription time.
 
-    However, if you've been handed a Request and you want to make it reactive, these methods are here for you.
+    However, if you've been handed a Request and you want a publisher, these methods are here
+    for you.
 
     Publisher for a request that doesn't return data.
     */
@@ -18,7 +21,7 @@ extension Request {
     /**
     Publisher for a request that returns data. Strongly typed, like the Resource publishers.
 
-    See also `publisher()`
+    See warning for `publisher()`
     */
     public func dataPublisher<T>() -> AnyPublisher<T, RequestError> {
         Future { promise in

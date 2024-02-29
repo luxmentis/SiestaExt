@@ -1,12 +1,15 @@
 import SwiftUI
 import Siesta
 
-/*
- todo Use cases:
- - Data view is always displayed, but with empty fields if nothing loaded, so that the right amount of space is allocated. This view should be an overlay in that case.
- */
-// todo better formatting for stock stuff
+/**
+ Displays the content of the supplied resource(s). Also, by passing the statusDisplay parameter you'll get
+ a progress spinner, error display and a Try Again button. See ResourceStatusModel.Rule for how you
+ control the relative priorities of these.
 
+ You might wish to implement the rendering of status information yourself, in which case you should write
+ your own version of this struct. You won't have much code to write as most of the useful functionality
+ is factored out, so you get to reuse it. Just copy this implementation to get started.
+ */
 public struct ResourceView<DataContent: View>: ResourceViewProtocol {
     public var dataContent: ([Any?]) -> DataContent
     @ObservedObject public var model: ResourceStatusModel
@@ -19,22 +22,23 @@ public struct ResourceView<DataContent: View>: ResourceViewProtocol {
     @ViewBuilder public func content(display: ResourceStatusModel.Display) -> some View {
         switch display {
             case .loading:
-                HStack {
-                    Spacer()
+                VStack() {
                     ProgressView()
-                    Spacer()
                 }
+                .frame(maxWidth: .infinity)
 
             case .error(let error):
-                VStack(spacing: 10) {
+                VStack(spacing: 20) {
                     Text(error.userMessage)
+                    .multilineTextAlignment(.center)
                     .foregroundColor(.red)
+                    .frame(maxWidth: 300)
 
                     Button("Try again") {
                         tryAgain()
                     }
                 }
-                .padding()
+                .frame(maxWidth: .infinity)
 
             case .data(let data):
                 dataContent(data)
@@ -42,6 +46,7 @@ public struct ResourceView<DataContent: View>: ResourceViewProtocol {
     }
 }
 
+/// Implement this if writing your own ResourceView. Just copy ResourceView's implementation as a starting point.
 public protocol ResourceViewProtocol: View {
     associatedtype DataContent: View
     associatedtype Content: View
@@ -54,10 +59,7 @@ public protocol ResourceViewProtocol: View {
 
 extension ResourceViewProtocol {
 
-    public init(resources: [any TypedResourceProtocol], statusDisplay: [ResourceStatusModel.Rule], @ViewBuilder content: @escaping ([Any?]) -> DataContent) {
-        self.init(model: ResourceStatusModel(resources, displayPriority: statusDisplay), dataContent: content)
-    }
-
+    /// Displays the content of the resource if it's loaded, otherwise nothing unless you supply statusDisplay.
     public init<R, C: View>(
         _ resource: R,
         statusDisplay: [ResourceStatusModel.Rule] = [ResourceStatusModel.Rule.allData],
@@ -73,6 +75,7 @@ extension ResourceViewProtocol {
         }
     }
 
+    /// Use this version if you want to display something of your own when your data isn't loaded yet. If using statusDisplay, make sure you use compatible rules - probably [.error, .alwaysData].
     public init<R>(
         _ resource: R,
         statusDisplay: [ResourceStatusModel.Rule] = [.alwaysData],
@@ -83,6 +86,7 @@ extension ResourceViewProtocol {
         }
     }
 
+    /// Displays the content of both resources once they're both loaded.
     public init<R1, R2, C: View>(
         _ resource1: R1,
         _ resource2: R2,
@@ -98,6 +102,7 @@ extension ResourceViewProtocol {
         }
     }
 
+    /// Displays the content of all resources once they're all loaded.
     public init<R1, R2, R3, C: View>(
         _ resource1: R1,
         _ resource2: R2,
@@ -114,11 +119,45 @@ extension ResourceViewProtocol {
         }
     }
 
+    /// The ultimate in flexibility - loads as many resources as you like, and renders content regardless of whether loaded (dependent on statusDisplay if you pass that of course). You pay for flexibility by having to cast to the data types you want.
+    public init(resources: [any TypedResourceProtocol], statusDisplay: [ResourceStatusModel.Rule], @ViewBuilder content: @escaping ([Any?]) -> DataContent) {
+        self.init(model: ResourceStatusModel(resources, displayPriority: statusDisplay), dataContent: content)
+    }
+
     @ViewBuilder public var body: some View {
         if let display = model.display {
             content(display: display)
         }
     }
 
+    /// Calls loadIfNeeded() on all resources
     public func tryAgain() { model.resources.forEach { $0.resource.loadIfNeeded() } }
+}
+
+
+#Preview("Error") {
+    previewContainer {
+        ResourceView(model: ResourceStatusModel(fake: .error(RequestError(response: nil, content: nil, cause: nil, userMessage: "Something really didn't work out, I'm sorry to say")), displayPriority: .standard)) { _ in EmptyView() }
+    }
+}
+
+#Preview("Loading") {
+    previewContainer {
+        ResourceView(model: ResourceStatusModel(fake: .loading, displayPriority: .standard)) { _ in EmptyView() }
+    }
+}
+
+@ViewBuilder fileprivate func previewContainer(contents: () -> some View) -> some View {
+    VStack(alignment: .leading) {
+        Text("My thing")
+        .font(.title)
+        .padding(.bottom)
+
+        contents()
+
+        Spacer()
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding()
+    .buttonStyle(.borderedProminent)
 }

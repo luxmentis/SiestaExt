@@ -2,6 +2,10 @@ import Siesta
 import Combine
 import CombineExt
 
+/**
+ Watches the state of some resources and applies a set of rules to determine what should be displayed to the user.
+ See ResourceStatusModel.Rule for how the rules work.
+ */
 public class ResourceStatusModel: ObservableObject {
     public let resources: [any TypedResourceProtocol]
     public let displayPriority: [Rule]
@@ -20,6 +24,13 @@ public class ResourceStatusModel: ObservableObject {
         .combineLatest()
         .map { [weak self] in self?.calculateDisplay($0) }
         .assign(to: &$display)
+    }
+
+    /// Just for previews
+    init(fake: Display?, displayPriority: [Rule]) {
+        display = fake
+        self.displayPriority = displayPriority
+        resources = []
     }
 
     private func calculateDisplay(_ states: [ResourceState<Any>]) -> Display? {
@@ -51,11 +62,11 @@ public class ResourceStatusModel: ObservableObject {
     }
 
     /**
+     You supply an array of rules in order of priority. For example, [.loading, .error, .allData] shows a
+     spinner whenever you're reloading, while [.error, .allData, .loading] favours showing whatever data you have -
+     stale or not.
+
      Adapted from SiestaUI (which is only for iOS).
-
-      Arbitrarily prioritizable rules for governing the behavior of `ResourceStatusOverlay`.
-
-      - SeeAlso: `ResourceStatusOverlay.displayPriority`
      */
     public enum Rule: String {
         /// If `Resource.isLoading` is true for any observed resources, enter the **loading** state.

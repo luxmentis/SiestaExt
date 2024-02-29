@@ -11,12 +11,9 @@ extension TypedResourceProtocol {
     /**
     The changing state of the resource, corresponding to the resource's events.
 
-    Note that content is typed; you'll get an error (in `latestError`) if your resource doesn't produce
-    the type you specify.
-
     Subscribing to this publisher triggers a call to `loadIfNeeded()`, which is probably what you want.
 
-    As with non-reactive Siesta, you'll immediately get an event (`observerAdded`) describing the current
+    As usual in Siesta, you'll immediately get an event (`observerAdded`) describing the current
     state of the resource.
 
     The publisher will never complete. Please dispose of your subscriptions appropriately otherwise you'll have

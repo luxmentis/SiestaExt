@@ -16,11 +16,6 @@ public struct ResourceState<T> {
     public let isLoading: Bool
     public let isRequesting: Bool
     public let isUpToDate: Bool
-
-    /**
-    Usually the other fields of this struct are sufficient, but sometimes it's useful to have access to
-    actual resource events, for example if you're recording network errors somewhere.
-    */
     public let event: ResourceEvent
 
     /// Transform state into a different content type
