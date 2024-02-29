@@ -2,6 +2,8 @@ import SwiftUI
 import Siesta
 import SiestaExt
 
+/// These views are just copies of the code from the main README.
+
 struct SimpleSampleView: View {
     let repoName: String
     let owner: String
