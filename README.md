@@ -14,15 +14,6 @@ Combine publishers, `@ObservableObject`... oh yes, and SwiftUI.
 - A typed wrapper for Resource (😱 controversial!) for clearer APIs
 
 
-## Project status
-
-🔴 Not quite ready yet 🔴  The code should be pretty stable, but 
-- tests need some attention
-- more docs in general
-- other non-code stuff
-
-
-
 ## Examples
 
 Read on, or jump straight into the GithubBrowser example app – it's the
