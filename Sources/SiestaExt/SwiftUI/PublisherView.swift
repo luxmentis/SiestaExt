@@ -4,6 +4,7 @@ import Combine
 /**
  A view that's rendered whenever a publisher has output. Not directly Siesta-related, but it's useful.
  */
+@MainActor
 public struct PublisherView<P: Publisher, Content: View>: View where P.Failure == Never {
     let publisher: P
     let content: (P.Output?) -> Content

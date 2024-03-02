@@ -37,6 +37,9 @@ public extension TypedResourceProtocol {
     func state(event: ResourceEvent) -> ResourceState<T> {
         var latestError = resource.latestError
         if latestError == nil && resource.latestData != nil && content == nil {
+            print("---------------")
+            debugPrint(resource.latestData!.content)
+            print("================")
             latestError = .contentTypeError()
         }
 

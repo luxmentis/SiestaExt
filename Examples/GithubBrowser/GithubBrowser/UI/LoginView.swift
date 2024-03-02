@@ -1,6 +1,7 @@
 import SwiftUI
 import Siesta
 
+@MainActor
 struct LoginView: View {
     @State private var pat = ""
     @Environment(\.presentationMode) var presentationMode

@@ -3,6 +3,7 @@ import Siesta
 import SiestaExt
 import Combine
 
+@MainActor
 struct RepositoryListView: View {
     let user: User?
 

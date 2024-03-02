@@ -1,6 +1,7 @@
 import SwiftUI
 import Siesta
 
+@MainActor
 struct ContentView: View {
     @ObservedObject var api = GitHubAPI
 

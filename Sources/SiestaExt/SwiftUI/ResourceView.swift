@@ -10,6 +10,8 @@ import Siesta
  your own version of this struct. You won't have much code to write as most of the useful functionality
  is factored out, so you get to reuse it. Just copy this implementation to get started.
  */
+
+@MainActor
 public struct ResourceView<DataContent: View>: ResourceViewProtocol {
     public var dataContent: ([Any?]) -> DataContent
     @ObservedObject public var model: ResourceStatusModel
@@ -47,6 +49,7 @@ public struct ResourceView<DataContent: View>: ResourceViewProtocol {
 }
 
 /// Implement this if writing your own ResourceView. Just copy ResourceView's implementation as a starting point.
+@MainActor
 public protocol ResourceViewProtocol: View {
     associatedtype DataContent: View
     associatedtype Content: View

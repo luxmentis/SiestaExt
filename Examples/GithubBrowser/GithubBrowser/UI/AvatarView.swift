@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct AvatarView: View {
     let user: User
 

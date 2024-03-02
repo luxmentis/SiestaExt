@@ -1,4 +1,5 @@
 // swift-tools-version: 5.9
+
 import PackageDescription
 
 let package = Package(
@@ -23,10 +24,15 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SiestaExt", dependencies: [
-            .product(name: "Siesta", package: "Siesta"),
-            .product(name: "CombineExt", package: "CombineExt"),
-        ]),
+            name: "SiestaExt",
+            dependencies: [
+                .product(name: "Siesta", package: "Siesta"),
+                .product(name: "CombineExt", package: "CombineExt"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
+        ),
 
         .testTarget(
             name: "SiestaExtTests",

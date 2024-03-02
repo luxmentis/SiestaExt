@@ -2,6 +2,7 @@ import SwiftUI
 import Siesta
 import SiestaExt
 
+@MainActor
 struct RepositoryView: View {
     let owner: String
     let name: String

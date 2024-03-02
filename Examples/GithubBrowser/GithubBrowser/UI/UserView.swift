@@ -2,6 +2,7 @@ import SwiftUI
 import Siesta
 import SiestaExt
 
+@MainActor
 struct UserView: View {
     @State var searchText = ""
 
