@@ -20,8 +20,8 @@ struct RepositoryListView: View {
         }
     }
 
-    var body: some View {
-        ResourceView(resource, statusDisplay: .noError) { (repositories: [Repository]) in
+    @ViewBuilder var body: some View {
+        RV2(resource, statusDisplay: .noError, style: DumbResourceViewStyle()) { repositories in
             List(repositories, id: \.url) { repo in
                 NavigationLink(destination: RepositoryView(owner: repo.owner.login, name: repo.name)) {
                     HStack {
@@ -41,4 +41,18 @@ struct RepositoryListView: View {
             .listStyle(.plain)
         }
     }
+}
+
+struct DumbResourceViewStyle: ResourceViewStyle {
+    @ViewBuilder
+    func loadingView() -> some View {
+        Text("LOADING").font(.title)
+    }
+
+    @ViewBuilder
+    func errorView(error: RequestError, tryAgain: @escaping () -> Void) -> some View {
+        Text("ERRRRRRRR").font(.title)
+
+    }
+
 }

@@ -3,7 +3,7 @@ import Siesta
 
 /**
  Displays the content of the supplied resource(s). Also, by passing the statusDisplay parameter you'll get
- a progress spinner, error display and a Try Again button. See ResourceStatusModel.Rule for how you
+ a progress spinner, error display and a Try Again button. See ResourceStatusModelRule for how you
  control the relative priorities of these.
 
  You might wish to implement the rendering of status information yourself, in which case you should write
@@ -24,7 +24,7 @@ public struct ResourceView<DataContent: View>: ResourceViewProtocol {
     @ViewBuilder public func content(display: ResourceStatusModel.Display) -> some View {
         switch display {
             case .loading:
-                VStack() {
+                VStack {
                     ProgressView()
                 }
                 .frame(maxWidth: .infinity)
@@ -65,7 +65,7 @@ extension ResourceViewProtocol {
     /// Displays the content of the resource if it's loaded, otherwise nothing unless you supply statusDisplay.
     public init<R, C: View>(
         _ resource: R,
-        statusDisplay: [ResourceStatusModel.Rule] = [ResourceStatusModel.Rule.allData],
+        statusDisplay: [ResourceStatusModelRule] = [ResourceStatusModelRule.allData],
         @ViewBuilder content: @escaping (R.T) -> C
     ) where R: TypedResourceProtocol, DataContent == Group<C?> {
 
@@ -81,7 +81,7 @@ extension ResourceViewProtocol {
     /// Use this version if you want to display something of your own when your data isn't loaded yet. If using statusDisplay, make sure you use compatible rules - probably [.error, .alwaysData].
     public init<R>(
         _ resource: R,
-        statusDisplay: [ResourceStatusModel.Rule] = [.alwaysData],
+        statusDisplay: [ResourceStatusModelRule] = [.alwaysData],
         @ViewBuilder content: @escaping (R.T?) -> DataContent
     ) where R: TypedResourceProtocol {
         self.init(resources: [resource], statusDisplay: statusDisplay) { data in
@@ -93,7 +93,7 @@ extension ResourceViewProtocol {
     public init<R1, R2, C: View>(
         _ resource1: R1,
         _ resource2: R2,
-        statusDisplay: [ResourceStatusModel.Rule] = [.allData],
+        statusDisplay: [ResourceStatusModelRule] = [.allData],
         @ViewBuilder content: @escaping (R1.T, R2.T) -> C
     ) where R1: TypedResourceProtocol, R2: TypedResourceProtocol, DataContent == Group<C?> {
         self.init(resources: [resource1, resource2], statusDisplay: statusDisplay) { data in
@@ -110,7 +110,7 @@ extension ResourceViewProtocol {
         _ resource1: R1,
         _ resource2: R2,
         _ resource3: R3,
-        statusDisplay: [ResourceStatusModel.Rule] = [.allData],
+        statusDisplay: [ResourceStatusModelRule] = [.allData],
         @ViewBuilder content: @escaping (R1.T, R2.T, R3.T) -> C
     ) where R1: TypedResourceProtocol, R2: TypedResourceProtocol, R3: TypedResourceProtocol, DataContent == Group<C?> {
         self.init(resources: [resource1, resource2, resource3], statusDisplay: statusDisplay) { data in
@@ -123,7 +123,7 @@ extension ResourceViewProtocol {
     }
 
     /// The ultimate in flexibility - loads as many resources as you like, and renders content regardless of whether loaded (dependent on statusDisplay if you pass that of course). You pay for flexibility by having to cast to the data types you want.
-    public init(resources: [any TypedResourceProtocol], statusDisplay: [ResourceStatusModel.Rule], @ViewBuilder content: @escaping ([Any?]) -> DataContent) {
+    public init(resources: [any TypedResourceProtocol], statusDisplay: [ResourceStatusModelRule], @ViewBuilder content: @escaping ([Any?]) -> DataContent) {
         self.init(model: ResourceStatusModel(resources, displayPriority: statusDisplay), dataContent: content)
     }
 

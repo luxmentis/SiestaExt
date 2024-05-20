@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "xcode-app",
+            "name": "GithubBrowserMac",
+            "buildTarget": {
+                "project": "GithubBrowser",
+                "target": "GithubBrowserMac",
+            },
+            "configuration": "Debug",
+        },
+        
+    ]
+}
