@@ -13,10 +13,10 @@ struct UserView: View {
                 .font(.title)
                 .padding()
 
-                RepositoryListView(user: nil)
+                RepositoryListView(resource: GitHubAPI.activeRepositories)
             }
             else {
-                ResourceView(GitHubAPI.user(searchText), statusDisplay: .standard) { (user: User) in
+                ResourceView(GitHubAPI.user(searchText), displayRules: .standard) { (user: User) in
                     HStack {
                         AvatarView(user: user)
 
@@ -29,7 +29,7 @@ struct UserView: View {
                     }
                     .padding()
 
-                    RepositoryListView(user: user)
+                    RepositoryListView(resource: GitHubAPI.repositories(ownedBy: user))
                 }
             }
 

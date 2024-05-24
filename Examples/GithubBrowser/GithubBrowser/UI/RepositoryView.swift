@@ -17,9 +17,9 @@ struct RepositoryView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading) {
-                ResourceView(GitHubAPI.repository(ownedBy: owner, named: name), statusDisplay: .standard) { (repository: Repository) in
+                ResourceView(GitHubAPI.repository(ownedBy: owner, named: name), displayRules: .standard) { (repository: Repository) in
                     VStack(alignment: .leading) {
-                        ResourceView(GitHubAPI.currentUserStarred(repository), statusDisplay: .noError) { (isStarred: Bool) in
+                        ResourceView(GitHubAPI.currentUserStarred(repository), displayRules: .noError) { (isStarred: Bool) in
                             HStack {
                                 Text(isStarred ? "★" : "☆")
                                 .rotationEffect(.degrees(starRotation))
@@ -53,7 +53,7 @@ struct RepositoryView: View {
                         if let resource = GitHubAPI.languages(repository) {
                             Text("Languages").font(.title3).padding(.bottom, 5)
 
-                            ResourceView(resource, statusDisplay: .noError) { (lang: [String: Int]) in
+                            ResourceView(resource, displayRules: .noError) { (lang: [String: Int]) in
                                 Text("\(lang.keys.joined(separator: " • "))")
                             }
                             .padding(.bottom, 20)
@@ -63,7 +63,7 @@ struct RepositoryView: View {
                         if let resource = GitHubAPI.contributors(repository) {
                             Text("Contributors").font(.title3).padding(.bottom, 5)
 
-                            ResourceView(resource, statusDisplay: .noError) { (users: [User]) in
+                            ResourceView(resource, displayRules: .noError) { (users: [User]) in
                                 VStack(alignment: .leading, spacing: 5) {
                                     ForEach(users, id: \.login) {
                                         Text($0.login)

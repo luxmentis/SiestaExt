@@ -2,48 +2,61 @@ import SwiftUI
 import Siesta
 
 /**
- Displays the content of the supplied resource(s). Also, by passing the statusDisplay parameter you'll get
- a progress spinner, error display and a Try Again button. See ResourceStatusModel.Rule for how you
+ Displays the content of the supplied Resource(s). Also, by passing the displayRules parameter you'll get
+ a loading spinner, error display and a Try Again button. See LoadableGroupStatusRule for how you
  control the relative priorities of these.
+
+ See the example apps for examples of how to use this, including in previews.
+
+ Although originally built for Siesta resources, it's more generally useful - parts of your app might get
+ data from places other than Siesta, and you can use it for anything that's Loadable. See Loadable for
+ further discussion about that.
 
  You might wish to implement the rendering of status information yourself, in which case you should write
  your own version of this struct. You won't have much code to write as most of the useful functionality
  is factored out, so you get to reuse it. Just copy this implementation to get started.
  */
-
 @MainActor
 public struct ResourceView<DataContent: View>: ResourceViewProtocol {
-    public var dataContent: ([Any?]) -> DataContent
-    @ObservedObject public var model: ResourceStatusModel
+    public var dataContent: () -> DataContent
+    public var loadables: [any Loadable]
+    @ObservedObject public var model: LoadableGroupStatusModel
 
-    public init(model: ResourceStatusModel, dataContent: @escaping ([Any?]) -> DataContent) {
-        self.model = model
+    public init(_ loadables: [any Loadable], displayRules: [LoadableGroupStatusRule], dataContent: @escaping () -> DataContent) {
+        self.loadables = loadables
         self.dataContent = dataContent
+        model = LoadableGroupStatusModel(loadables, rules: displayRules)
     }
 
-    @ViewBuilder public func content(display: ResourceStatusModel.Display) -> some View {
-        switch display {
+    @ViewBuilder public var body: some View {
+        switch model.status {
             case .loading:
-                VStack() {
+                VStack {
                     ProgressView()
                 }
                 .frame(maxWidth: .infinity)
 
             case .error(let error):
                 VStack(spacing: 20) {
-                    Text(error.userMessage)
+                    // You'd think RequestError would return userMessage for localizedDescription, but it doesn't.
+                    Text((error as? RequestError)?.userMessage ?? error.localizedDescription)
                     .multilineTextAlignment(.center)
                     .foregroundColor(.red)
                     .frame(maxWidth: 300)
 
-                    Button("Try again") {
-                        tryAgain()
+                    if loadables.contains(where: { $0.isReloadable }) {
+                        Button("Try again") {
+                            tryAgain()
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
 
-            case .data(let data):
-                dataContent(data)
+            case .data:
+                dataContent()
+
+            case nil:
+                EmptyView()
         }
     }
 }
@@ -52,26 +65,24 @@ public struct ResourceView<DataContent: View>: ResourceViewProtocol {
 @MainActor
 public protocol ResourceViewProtocol: View {
     associatedtype DataContent: View
-    associatedtype Content: View
 
-    var dataContent: ([Any?]) -> DataContent { get set }
-    var model: ResourceStatusModel { get set }
-    init(model: ResourceStatusModel, dataContent: @escaping ([Any?]) -> DataContent)
-    func content(display: ResourceStatusModel.Display) -> Content
+    var dataContent: () -> DataContent { get set }
+    var loadables: [any Loadable] { get set }
+    init(_ loadables: [any Loadable], displayRules: [LoadableGroupStatusRule], dataContent: @escaping () -> DataContent)
 }
 
 extension ResourceViewProtocol {
 
     /// Displays the content of the resource if it's loaded, otherwise nothing unless you supply statusDisplay.
-    public init<R, C: View>(
-        _ resource: R,
-        statusDisplay: [ResourceStatusModel.Rule] = [ResourceStatusModel.Rule.allData],
-        @ViewBuilder content: @escaping (R.T) -> C
-    ) where R: TypedResourceProtocol, DataContent == Group<C?> {
+    public init<L, C: View>(
+        _ loadable: L,
+        displayRules: [LoadableGroupStatusRule] = [.allData],
+        @ViewBuilder content: @escaping (L.Content) -> C
+    ) where L: Loadable, DataContent == Group<C?> {
 
-        self.init(resources: [resource], statusDisplay: statusDisplay) { data in
+        self.init([loadable], displayRules: displayRules) {
             Group {
-                if let data = data[0] as? R.T {
+                if let data = loadable.state.content {
                     content(data)
                 }
             }
@@ -79,26 +90,26 @@ extension ResourceViewProtocol {
     }
 
     /// Use this version if you want to display something of your own when your data isn't loaded yet. If using statusDisplay, make sure you use compatible rules - probably [.error, .alwaysData].
-    public init<R>(
-        _ resource: R,
-        statusDisplay: [ResourceStatusModel.Rule] = [.alwaysData],
-        @ViewBuilder content: @escaping (R.T?) -> DataContent
-    ) where R: TypedResourceProtocol {
-        self.init(resources: [resource], statusDisplay: statusDisplay) { data in
-            content(data[0] as? R.T)
+    public init<L>(
+        _ loadable: L,
+        displayRules: [LoadableGroupStatusRule] = [.alwaysData],
+        @ViewBuilder content: @escaping (L.Content?) -> DataContent
+    ) where L: Loadable {
+        self.init([loadable], displayRules: displayRules) {
+            content(loadable.state.content)
         }
     }
 
     /// Displays the content of both resources once they're both loaded.
-    public init<R1, R2, C: View>(
-        _ resource1: R1,
-        _ resource2: R2,
-        statusDisplay: [ResourceStatusModel.Rule] = [.allData],
-        @ViewBuilder content: @escaping (R1.T, R2.T) -> C
-    ) where R1: TypedResourceProtocol, R2: TypedResourceProtocol, DataContent == Group<C?> {
-        self.init(resources: [resource1, resource2], statusDisplay: statusDisplay) { data in
+    public init<L1, L2, C: View>(
+        _ loadable1: L1,
+        _ loadable2: L2,
+        displayRules: [LoadableGroupStatusRule] = [.allData],
+        @ViewBuilder content: @escaping (L1.Content, L2.Content) -> C
+    ) where L1: Loadable, L2: Loadable, DataContent == Group<C?> {
+        self.init([loadable1, loadable2], displayRules: displayRules) {
             Group {
-                if let v1 = data[0] as? R1.T, let v2 = data[1] as? R2.T {
+                if let v1 = loadable1.state.content, let v2 = loadable2.state.content {
                     content(v1, v2)
                 }
             }
@@ -106,47 +117,43 @@ extension ResourceViewProtocol {
     }
 
     /// Displays the content of all resources once they're all loaded.
-    public init<R1, R2, R3, C: View>(
-        _ resource1: R1,
-        _ resource2: R2,
-        _ resource3: R3,
-        statusDisplay: [ResourceStatusModel.Rule] = [.allData],
-        @ViewBuilder content: @escaping (R1.T, R2.T, R3.T) -> C
-    ) where R1: TypedResourceProtocol, R2: TypedResourceProtocol, R3: TypedResourceProtocol, DataContent == Group<C?> {
-        self.init(resources: [resource1, resource2, resource3], statusDisplay: statusDisplay) { data in
+    public init<L1, L2, L3, C: View>(
+        _ loadable1: L1,
+        _ loadable2: L2,
+        _ loadable3: L3,
+        displayRules: [LoadableGroupStatusRule] = [.allData],
+        @ViewBuilder content: @escaping (L1.Content, L2.Content, L3.Content) -> C
+    ) where L1: Loadable, L2: Loadable, L3: Loadable, DataContent == Group<C?> {
+        self.init([loadable1, loadable2, loadable3], displayRules: displayRules) {
             Group {
-                if let v1 = data[0] as? R1.T, let v2 = data[1] as? R2.T, let v3 = data[2] as? R3.T {
+                if let v1 = loadable1.state.content, let v2 = loadable2.state.content, let v3 = loadable3.state.content {
                     content(v1, v2, v3)
                 }
             }
         }
     }
 
-    /// The ultimate in flexibility - loads as many resources as you like, and renders content regardless of whether loaded (dependent on statusDisplay if you pass that of course). You pay for flexibility by having to cast to the data types you want.
-    public init(resources: [any TypedResourceProtocol], statusDisplay: [ResourceStatusModel.Rule], @ViewBuilder content: @escaping ([Any?]) -> DataContent) {
-        self.init(model: ResourceStatusModel(resources, displayPriority: statusDisplay), dataContent: content)
-    }
-
-    @ViewBuilder public var body: some View {
-        if let display = model.display {
-            content(display: display)
+    /// Calls loadIfNeeded() on all resources
+    public func tryAgain() {
+        loadables.forEach {
+            if $0.isReloadable {
+                $0.loadIfNeeded()
+            }
         }
     }
-
-    /// Calls loadIfNeeded() on all resources
-    public func tryAgain() { model.resources.forEach { $0.resource.loadIfNeeded() } }
 }
 
 
 #Preview("Error") {
     previewContainer {
-        ResourceView(model: ResourceStatusModel(fake: .error(RequestError(response: nil, content: nil, cause: nil, userMessage: "Something really didn't work out, I'm sorry to say")), displayPriority: .standard)) { _ in EmptyView() }
+        let error = RequestError(response: nil, content: nil, cause: nil, userMessage: "Something really didn't work out, I'm sorry to say")
+        return ResourceView([TypedResource<String>.fakeFailure(error)], displayRules: .standard) { EmptyView() }
     }
 }
 
 #Preview("Loading") {
     previewContainer {
-        ResourceView(model: ResourceStatusModel(fake: .loading, displayPriority: .standard)) { _ in EmptyView() }
+        ResourceView([TypedResource<String>.fakeLoading()], displayRules: .standard) { EmptyView() }
     }
 }
 

@@ -46,7 +46,7 @@ struct StatusSampleView: View {
             Text("\(owner)/\(repoName)")
             .font(.title)
 
-            ResourceView(GitHubAPI.repository(ownedBy: owner, named: repoName), statusDisplay: .standard) { (repo: Repository) in
+            ResourceView(GitHubAPI.repository(ownedBy: owner, named: repoName), displayRules: .standard) { (repo: Repository) in
                 if let starCount = repo.starCount {
                     Text("★ \(starCount)")
                 }

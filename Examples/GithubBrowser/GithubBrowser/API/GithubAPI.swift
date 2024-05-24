@@ -13,13 +13,13 @@ class _GitHubAPI: ObservableObject {
 
     private let service = Service(
         baseURL: "https://api.github.com",
-        standardTransformers: [.text, .image],
+        standardTransformers: [.text, .image],   // No .json because we use Swift 4 JSONDecoder instead of older JSONSerialization
         networking: {
             let session = URLSessionConfiguration.ephemeral
             session.timeoutIntervalForResource = 20 // the default 60 seconds is a long time
             return session
         }()
-    )  // No .json because we use Swift 4 JSONDecoder instead of older JSONSerialization
+    )
 
     fileprivate init() {
         #if DEBUG
@@ -50,7 +50,7 @@ class _GitHubAPI: ObservableObject {
             // Here we replace the default error message with the one provided by the GitHub API (if present).
 
             $0.pipeline[.cleanup].add(
-              GitHubErrorMessageExtractor(jsonDecoder: jsonDecoder))
+                GitHubErrorMessageExtractor(jsonDecoder: jsonDecoder))
         }
 
         // –––––– Resource-specific configuration ––––––
@@ -88,7 +88,7 @@ class _GitHubAPI: ObservableObject {
 
         service.configureTransformer("/search/repositories") {
             try jsonDecoder.decode(SearchResults<Repository>.self, from: $0.content)
-                .items  // Transformers can do arbitrary post-processing
+            .items  // Transformers can do arbitrary post-processing
         }
 
         service.configureTransformer("/repos/*/*") {
@@ -102,11 +102,11 @@ class _GitHubAPI: ObservableObject {
         service.configureTransformer("/repos/*/*/languages") {
             // For this request, GitHub gives a response of the form {"Swift": 421956, "Objective-C": 11000, ...}.
             // Instead of using a custom model class for this one, we just model it as a raw dictionary.
-            try jsonDecoder.decode([String:Int].self, from: $0.content)
+            try jsonDecoder.decode([String: Int].self, from: $0.content)
         }
 
         service.configure("/user/starred/*/*") {   // GitHub gives 202 for “starred” and 404 for “not starred.”
-            $0.pipeline[.model].add(               // This custom transformer turns that curious convention into
+            $0.pipeline[.model].add(// This custom transformer turns that curious convention into
                 TrueIfResourceFoundTransformer())  // a resource whose content is a simple boolean.
         }
 
@@ -181,30 +181,39 @@ class _GitHubAPI: ObservableObject {
         .typed()
     }
 
-    func repository(ownedBy login: String, named name: String) -> TypedResource<Repository> {
+    func repositories(ownedBy user: User) -> TypedResource<[Repository]> {
+        GitHubAPI.user(user.login)
+        .resource!
+        .relative(user.repositoriesURL)
+        .withParam("sort", "updated")
+        .typed()
+    }
+
+    private func repositoryResource(ownedBy login: String, named name: String) -> Resource {
         service
         .resource("/repos")
         .child(login)
         .child(name)
-        .typed()
     }
 
-    func repository(_ repositoryModel: Repository) -> TypedResource<Repository> {
-        repository(
+    private func repositoryResource(_ repositoryModel: Repository) -> Resource {
+        repositoryResource(
             ownedBy: repositoryModel.owner.login,
             named: repositoryModel.name)
     }
 
+    func repository(ownedBy login: String, named name: String) -> TypedResource<Repository> {
+        repositoryResource(ownedBy: login, named: name).typed()
+    }
+
     func contributors(_ repositoryModel: Repository) -> TypedResource<[User]>? {
-        repository(repositoryModel)
-        .resource
+        repositoryResource(repositoryModel)
         .optionalRelative(repositoryModel.contributorsURL)?
         .typed()
     }
 
     func languages(_ repositoryModel: Repository) -> TypedResource<[String: Int]>? {
-        repository(repositoryModel)
-        .resource
+        repositoryResource(repositoryModel)
         .optionalRelative(repositoryModel.languagesURL)?
         .typed()
     }
@@ -218,27 +227,27 @@ class _GitHubAPI: ObservableObject {
     }
 
     func setStarred(_ isStarred: Bool, repository repositoryModel: Repository) -> Request {
-        let starredResource = currentUserStarred(repositoryModel)
+        let starredResource = currentUserStarred(repositoryModel).resource!
         return starredResource
-            .resource.request(isStarred ? .put : .delete)
-            .onSuccess { _ in
-                // Update succeeded. Directly update the locally cached “starred / not starred” state.
+        .request(isStarred ? .put : .delete)
+        .onSuccess { _ in
+            // Update succeeded. Directly update the locally cached “starred / not starred” state.
 
-                starredResource.resource.overrideLocalContent(with: isStarred)
+            starredResource.overrideLocalContent(with: isStarred)
 
-                // Ask server for an updated star count. Note that we only need to trigger the load here, not handle
-                // the response! Any UI that is displaying the star count will be observing this resource, and thus
-                // will pick up the change. The code that knows _when_ to trigger the load is decoupled from the code
-                // that knows _what_ to do with the updated data. This is the magic of Siesta.
+            // Ask server for an updated star count. Note that we only need to trigger the load here, not handle
+            // the response! Any UI that is displaying the star count will be observing this resource, and thus
+            // will pick up the change. The code that knows _when_ to trigger the load is decoupled from the code
+            // that knows _what_ to do with the updated data. This is the magic of Siesta.
 
-                for delay in [0.1, 1.0, 2.0] {  // Github propagates the updated star count slowly
-                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                        // This ham-handed repeated loading is not as expensive as it first appears, thanks to the fact
-                        // that Siesta magically takes care of ETag / If-modified-since / HTTP 304 for us.
-                        self.repository(repositoryModel).resource.load()
-                    }
+            for delay in [0.1, 1.0, 2.0] {  // Github propagates the updated star count slowly
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    // This ham-handed repeated loading is not as expensive as it first appears, thanks to the fact
+                    // that Siesta magically takes care of ETag / If-modified-since / HTTP 304 for us.
+                    self.repositoryResource(repositoryModel).load()
                 }
             }
+        }
     }
 }
 
@@ -249,12 +258,12 @@ private struct GitHubErrorMessageExtractor: ResponseTransformer {
     let jsonDecoder: JSONDecoder
 
     func process(_ response: Response) -> Response {
-        guard case .failure(var error) = response,     // Unless the response is a failure...
-          let errorData: Data = error.typedContent(),  // ...with data...
-          let githubError = try? jsonDecoder.decode(   // ...that encodes a standard GitHub error envelope...
-            GitHubErrorEnvelope.self, from: errorData)
+        guard case .failure(var error) = response, // Unless the response is a failure...
+              let errorData: Data = error.typedContent(), // ...with data...
+              let githubError = try? jsonDecoder.decode(// ...that encodes a standard GitHub error envelope...
+                  GitHubErrorEnvelope.self, from: errorData)
         else {
-          return response                              // ...just leave it untouched.
+            return response                              // ...just leave it untouched.
         }
 
         error.userMessage = githubError.message        // GitHub provided an error message. Show it to the user!
@@ -280,7 +289,8 @@ private struct TrueIfResourceFoundTransformer: ResponseTransformer {
                     entity.content = false    // 404 → false
                     return logTransformation(
                         .success(entity))
-                } else {
+                }
+                else {
                     return response           // Any other error remains unchanged
                 }
         }

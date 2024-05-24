@@ -5,7 +5,7 @@ write iOS / macOS REST clients](https://github.com/bustoutsolutions/Siesta).
 (If you don't know Siesta, you should check it out. It's great.)
 
 Because of when it was written, Siesta is callback-based. Now we have
-Combine publishers, `@ObservableObject`... oh yes, and SwiftUI.
+Combine publishers, `@ObservableObject`, and oh yes – SwiftUI.
 
 ## Features
 
@@ -16,15 +16,21 @@ Combine publishers, `@ObservableObject`... oh yes, and SwiftUI.
 
 ## Examples
 
-Read on, or jump straight into the GithubBrowser example app – it's the
-original Siesta example app rewritten in SwiftUI, and it's a thing of beauty :-)
+Read on, or jump straight into one of the apps in the `Examples` folder:
+- SiestaExtSimpleExample: a good starting point that shows you the basics
+- GithubBrowser: it's the original Siesta example app rewritten in SwiftUI. 
+  Be amazed at how little code there is – it's a thing of beauty :-)
+
+
+## Tutorial
 
 ### First off, understand `TypedResource`
 
 Unlike Siesta's `Resource`, most things in this project are strongly typed.
-Your starting point is `TypedResource<T>`, which you get by calling `typed()
-` on a `Resource`. For example `GithubAPI`'s methods now return
-`TypedResources`:
+Your starting point is `TypedResource<T>`, where T is the content type.
+
+If you define your API methods using `TypedResource`, the rest of your app knows what types it's
+getting! For example, from the `GithubAPI` example app:
 
 ```swift
 func repository(ownedBy login: String, named name: String) -> TypedResource<Repository> {
@@ -32,24 +38,20 @@ func repository(ownedBy login: String, named name: String) -> TypedResource<Repo
     .resource("/repos")
     .child(login)
     .child(name)
-    .typed()
+    .typed() // Create a TypedResource from a Resource. Type inference usually figures out <T>.
 }
 ```
 
-Notice that the rest of your app now knows what data type will be loaded by
-your API methods!
-
 `TypedResource` is just a wrapper, so you can refer
-to `someTypedResource.resource` to get
-the underlying `Resource` when you need to.
+to `someTypedResource.resource` when you need to.
 
-Yes, using a typed wrapper like this is certainly an opinionated choice, but
+(Yes, using a typed wrapper like this is certainly an opinionated choice, but
 it makes a lot of things in here work better. Plus your API classes are now
 more expressive. If you really don't like this, you can still base 
-everything around `Resource`, and call `typed()` when you need to.
+everything around `Resource`, and call `typed()` when you need to.)
 
 
-### Using a Resource in SwiftUI
+### Use a Resource in SwiftUI
 
 **Just look at the brevity of this code!** You need nothing more than this
 and the API class. I hope you're not getting paid by the line.
@@ -82,12 +84,11 @@ struct SimpleSampleView: View {
 }
 ```
 
-Or, make your data parameter optional, and render something when you don't
+Or, by making your data parameter optional you can render something when you don't
 have data yet (but read on for a fancier solution):
 
 ```swift
-ResourceView(GitHubAPI.repository(ownedBy: owner, named:
-repoName)) { (repo: Repository?) in
+ResourceView(GitHubAPI.repository(ownedBy: owner, named: repoName)) { (repo: Repository?) in
     if let repo {
         if let starCount = repo.starCount {
             Text("★ \(starCount)")
@@ -116,8 +117,7 @@ struct StatusSampleView: View {
             Text("\(owner)/\(repoName)")
             .font(.title)
 
-            ResourceView(GitHubAPI.repository(ownedBy: owner, named:
-            repoName), /* Added this bit: */ statusDisplay: .standard) { (repo:
+            ResourceView(GitHubAPI.repository(ownedBy: owner, named: repoName), /* Added this bit: */ displayRules: .standard) { (repo:
                 Repository) in
                 if let starCount = repo.starCount {
                     Text("★ \(starCount)")
@@ -139,11 +139,14 @@ This is inspired by Siesta's `ResourceStatusOverlay`, and you can control
 the relative priorities of loading, error and data states in much the same
 way: with the array of rules you pass. For
 example, to
-display data, no matter how stale: `statusDisplay: [.anyData, .loading,
+display data, no matter how stale: `displayRules: [.anyData, .loading,
 .error]`.
 
+There are a few predefined sets like `.standard` (used above), which is short for
+to `[.anyData, .loading, .error]`
 
-### ...but you possibly want to render those yourself, more nicely
+
+### But possibly you want to render progress and errors yourself
 
 This is easy – just write your own version of `ResourceView`. That sounds
 onerous, but in fact you have very little code to write – most of the
@@ -151,15 +154,11 @@ mechanics is farmed out to a protocol and a helper class. Just have a look at
 the main implementation of `ResourceView`.
 
 
-### Multiple resources
+### Multiple resources, either all at once...
 
-Your content block can use more than one resource.
-
-(Alternatively you could
-use separate `ResourceView`s of course, but your content might be
-intertwined, or you might want everything loaded before anything is displayed.)
-
-You can also nest `ResourceView`s. Slice and dice things however you want.
+Your content block can use more than one resource, and will be displayed once they
+all have content. Particularly useful if you're intertwining content from multiple
+resources.
 
 ```swift
 struct MultipleSampleView: View {
@@ -192,6 +191,94 @@ struct MultipleSampleView: View {
 }
 ```
 
+### ...or you can nest resource views
+
+In this example, the post is displayed first, then the comments are loaded. You could
+load them both at once, but this way your user can get reading!
+
+Also, notice the loading of user details; this _must_ be nested as it requires the userId
+from the post.
+```swift
+ResourceView(api.post(id: postId), displayRules: .standard) { (post: Post) in
+    VStack {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(post.title).font(.title)
+            Text(post.body).font(.body)
+            
+            ResourceView(api.user(id: post.userId)) {
+                Text("– \(user.name) (\(user.email))").font(.footnote)
+            }
+        }
+        .padding()
+
+        ResourceView(api.comments(postId: post.id), displayRules: .standard) {
+            List($0) { comment in
+                VStack(alignment: .leading) {
+                    Text(comment.body)
+                    Text("– \(comment.name) (\(comment.email))").font(.footnote)
+                }
+            }
+        }
+
+        Spacer()
+    }
+}
+```
+
+
+### Fakes for Previews
+
+Chances are you don't want to make real network requests in your SwiftUI previews! `TypedResource` has built-in
+support for fakes, so you can do things like this:
+
+```swift
+struct UserView: View {
+    let userId: Int
+    let fakeUser: TypedResource<User>?
+  
+    ...
+  
+    var body: some View {
+        ResourceView(fakeUser ?? api.user(id: userId)) {
+            ...
+        }
+    }
+}
+
+// With fake data
+#Preview {
+    UserView(fakeUser: User(id: 1, name: "Persephone", email: "p@there.com"))
+}
+
+// See what the loading view looks like
+#Preview("Loading") {
+    UserView(fakeUser: .fakeLoading())
+}
+
+// See what the error view looks like
+#Preview("Failed") {
+    UserView(fakeUser: .fakeFailure(RequestError(...)))
+}
+```
+
+
+### Load things that aren't Siesta resources!
+
+Parts of your app might load data from places other than Siesta. It would be a 
+shame to lose `ResourceView` and its display logic just because your data comes from a different source.
+`Loadable` to the rescue – it's an abstraction of the basics of Siesta's resource
+loading paradigm, and `ResourceView` will load anything `Loadable` (`TypedResource` is a `Loadable`).
+
+If you have a `Publisher` you can use that – `Loadable` conformance is built in – otherwise implement `Loadable` yourself.
+
+```swift
+ResourceView(someLongRunningCalculationPublisher.loadable(), displayRules: .standard) { (answer: Int) in
+    Text("And the answer is: \(answer)")  // you just know it'll be 42
+}
+```
+
+
+
 ### Want more control, less magic?
 
 If you want to do something more complex, or create your own building blocks,
@@ -199,14 +286,22 @@ or if you're an MVVM hound and the
 examples above are giving you conniptions with their lack of model objects,
 you can step down a level:
 
+#### Published properties
+
+`TypedResource` is an `ObservableObject`, and its `state` and `content`variables are 
+`@Published`.
+
+`state` is a `ResourceState<T>` – a snapshot of the resource's state at a point in time. 
+It contains all the usual fields you'll be interested in (`latestError`, etc), plus 
+typed content.
+
+
 #### Combine publishers
 
-`TypedResource` (and `Resource` for that matter) have publishers that output
+`TypedResource` (and any `Loadable` for that matter) have publishers that output
 progress:
 
-- `statePublisher()` - outputs `ResourceState<T>`: a snapshot of
-  a resource's state at a point in time. It contains all the usual fields
-  you'll be interested in (`latestError`, etc), plus typed content.
+- `statePublisher()` outputs `ResourceState<T>`
 - `contentPublisher()` outputs content when there is some; it's convenient
   if you don't care about the rest of the state
 - `optionalContentPublisher()` is the same but outputs `nil` to let you know
@@ -214,14 +309,6 @@ progress:
 
 Subscribing to a publisher triggers `loadIfNeeded()`, and retains
 the `Resource` until you unsubscribe.
-
-
-#### ObservableResource
-
-Calling `someTypedResource.observable()` gives you `ObservableResource`, an
-`ObservableObject` that publishes resource state.
-
-This makes a good `@ObservedObject` in your views, for example.
 
 
 #### Publishers for requests too
