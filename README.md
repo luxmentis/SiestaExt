@@ -2,10 +2,14 @@
 
 SwiftUI and Combine additions to [Siesta – the elegant way to
 write iOS / macOS REST clients](https://github.com/bustoutsolutions/Siesta).
-(If you don't know Siesta, you should check it out. It's great.)
 
 Because of when it was written, Siesta is callback-based. Now we have
 Combine publishers, `@ObservableObject`, and oh yes – SwiftUI.
+
+*(If you don't know Siesta, have a quick look at a couple of the examples below –
+and be amazed by the simplicity of SwiftUI code accessing a REST API. Then
+go and read up on Siesta.)*
+
 
 ## Features
 
@@ -194,7 +198,7 @@ struct MultipleSampleView: View {
 ### ...or you can nest resource views
 
 In this example, the post is displayed first, then the comments are loaded. You could
-load them both at once, but this way your user can get reading!
+load them both at once, but this way your user can get reading sooner.
 
 Also, notice the loading of user details; this _must_ be nested as it requires the userId
 from the post.
@@ -228,7 +232,7 @@ ResourceView(api.post(id: postId), displayRules: .standard) { (post: Post) in
 
 ### Fakes for Previews
 
-Chances are you don't want to make real network requests in your SwiftUI previews! `TypedResource` has built-in
+Chances are you don't want to make real network requests in your SwiftUI previews. `TypedResource` has built-in
 support for fakes, so you can do things like this:
 
 ```swift
@@ -291,7 +295,7 @@ you can step down a level:
 `TypedResource` is an `ObservableObject`, and its `state` and `content`variables are 
 `@Published`.
 
-`state` is a `ResourceState<T>` – a snapshot of the resource's state at a point in time. 
+`TypedResource.state` is a `ResourceState<T>` – a snapshot of the resource's state at a point in time.
 It contains all the usual fields you'll be interested in (`latestError`, etc), plus 
 typed content.
 
