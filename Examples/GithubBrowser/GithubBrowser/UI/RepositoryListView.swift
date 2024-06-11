@@ -8,7 +8,7 @@ struct RepositoryListView: View {
     @ObservedObject var resource: TypedResource<[Repository]>
 
     var body: some View {
-        ResourceView(resource, displayRules: .noError) { (repositories: [Repository]) in
+        ResourceView(resource, displayRules: [.allData, .loading]) { (repositories: [Repository]) in
             List(repositories, id: \.url) { repo in
                 NavigationLink(destination: RepositoryView(owner: repo.owner.login, name: repo.name)) {
                     HStack {

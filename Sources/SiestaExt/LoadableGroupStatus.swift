@@ -1,7 +1,13 @@
 import Combine
 import CombineExt
 
+/**
+ Watches the state of some resources and applies a set of rules to determine what should be displayed to the user.
+ See `LoadableGroupStatusRule` for how the rules work.
+ */
 public class LoadableGroupStatusModel: ObservableObject {
+    /// The overall status of the group; this would determine what should be displayed to the user.
+    /// Optional because it's possible for no rules to match the current state
     @Published var status: LoadableGroupStatus?
 
     init(_ loadables: [any Loadable], rules: [LoadableGroupStatusRule]) {
@@ -12,30 +18,38 @@ public class LoadableGroupStatusModel: ObservableObject {
     }
 }
 
+/**
+ These rules are used in a prioritised list to determine the overall display status of the group.
+ For example:
+ 
+ [.loading, .error, .allData]: indicates loading if any resources are loading, or else an error if
+ any have had an error, otherwise data if all resources have it
+ 
+ [.allData, .loading, .error]: prioritise showing data (once we have it all), even if it's out of date
+ 
+ [.anyData, .loading, .error]: similar, but allows us to show data to the user before everything is loaded
+ 
+ [.anyData, .error]: don't show a loading spinner - just data or errors
+ 
+ And so on - a flexible system. There are no predefined rule lists, as what you want will depend very
+ much on your use case.
+ */
 public enum LoadableGroupStatusRule: String, Sendable {
     /// If `isLoading` is true for any observed resources, enter the **loading** state.
     case loading
 
-    /// If `hasContent` is non-nil for _any_ observed resources, enter the **success** state.
+    /// If `content` is non-nil for _any_ observed resources, enter the **data** state.
     case anyData
 
-    /// If `hasContent` is non-nil for _all_ observed resources, enter the **success** state.
+    /// If `content` is non-nil for _all_ observed resources, enter the **data** state.
     case allData
 
-    /// Always results in .data status, regardless of state
+    /// Always results in .data status, regardless of resource state
     case alwaysData
 
     /// If `error` is non-nil for any observed resources, enter the **error** state.
     /// If multiple observed resources have errors, pick one arbitrarily to show its error message.
     case error
-}
-
-public extension Array where Element == LoadableGroupStatusRule {
-    static let standard: [LoadableGroupStatusRule] = [.anyData, .loading, .error]
-
-    static let noError: [LoadableGroupStatusRule] = [.loading, .alwaysData]
-
-    static let dataOnly: [LoadableGroupStatusRule] = [.alwaysData]
 }
 
 public enum LoadableGroupStatus {

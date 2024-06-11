@@ -16,7 +16,7 @@ struct UserView: View {
                 RepositoryListView(resource: GitHubAPI.activeRepositories)
             }
             else {
-                ResourceView(GitHubAPI.user(searchText), displayRules: .standard) { (user: User) in
+                ResourceView(GitHubAPI.user(searchText), displayRules: [.allData, .loading, .error]) { (user: User) in
                     HStack {
                         AvatarView(user: user)
 

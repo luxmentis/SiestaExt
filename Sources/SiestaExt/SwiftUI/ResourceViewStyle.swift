@@ -14,6 +14,10 @@ public protocol ResourceViewStyle: Sendable {
     @ViewBuilder
     func loadingView() -> LoadingView
 
+    /**
+     If `canTryAgain` is true (it will be unless you're using something other than Siesta resources), you
+     could display a Try Again button that calls `tryAgain`.
+     */
     @ViewBuilder
     func errorView(errorMessage: String, canTryAgain: Bool, tryAgain: @escaping () -> Void) -> ErrorView
 }

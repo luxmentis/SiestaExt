@@ -2,7 +2,7 @@ import SwiftUI
 import Siesta
 
 /**
- Displays the content of the supplied Resource(s). Also, by passing the displayRules parameter you'll get
+ Displays the content of the supplied resource(s). Also, by passing the displayRules parameter you can get
  a loading spinner, error display and a Try Again button. See LoadableGroupStatusRule for how you
  control the relative priorities of these.
 
@@ -11,81 +11,72 @@ import Siesta
  To build your own loading view and/or error view, implement your own `ResourceViewStyle` and adopt it
  with the view modifier `resourceViewStyle()`.
 
- Although originally built for Siesta resources, it's more generally useful - parts of your app might get
+ Although primarily built for Siesta resources, it's more generally useful - parts of your app might get
  data from places other than Siesta, and you can use it for anything that's Loadable. See Loadable for
  further discussion about that.
  */
 @MainActor
-public struct ResourceView<DataContent: View>: View {
-    private var dataContent: () -> DataContent
+public struct ResourceView<ContentView: View>: View {
+    private var contentView: () -> ContentView
     private var loadables: [any Loadable]
     @ObservedObject private var model: LoadableGroupStatusModel
     @Environment(\.resourceViewStyle) private var style
 
-    /// Displays the content of the resource if it's loaded, otherwise nothing unless you supply statusDisplay.
-    public init<L, C: View>(
-        _ loadable: L,
-        displayRules: [LoadableGroupStatusRule] = [.allData],
-        @ViewBuilder content: @escaping (L.Content) -> C
-    ) where L: Loadable, DataContent == Group<C?> {
+    /**
+     With this initialiser, content will be rendered once all resources have data.
 
-        self.init([loadable], displayRules: displayRules) {
-            Group {
-                if let data = loadable.state.content {
-                    content(data)
-                }
+     See `LoadableGroupStatusRule` for an explanation of displayRules.
+     */
+    public init<each R: Loadable, Content: View>(
+        _ loadables: repeat each R,
+        displayRules: [LoadableGroupStatusRule] = [.allData],
+        @ViewBuilder content: @escaping (repeat (each R).Content) -> Content
+    ) where ContentView == Content? {
+
+        self.loadables = [any Loadable]()
+        _ = (repeat self.loadables.append((each loadables)))
+
+        model = LoadableGroupStatusModel(self.loadables, rules: displayRules)
+
+        var allContent: (repeat (each R).Content)? {
+            do {
+                return try (repeat (each loadables).state.content.throwingUnwrap())
+            }
+            catch {
+                return nil
             }
         }
-    }
 
-    /// Use this version if you want to display something of your own when your data isn't loaded yet. If using statusDisplay, make sure you use compatible rules - probably [.error, .alwaysData].
-    public init<L>(
-        _ loadable: L,
-        displayRules: [LoadableGroupStatusRule] = [.alwaysData],
-        @ViewBuilder content: @escaping (L.Content?) -> DataContent
-    ) where L: Loadable {
-        self.init([loadable], displayRules: displayRules) {
-            content(loadable.state.content)
+        contentView = {
+            allContent.map { content(repeat each $0) }
         }
     }
 
-    /// Displays the content of both resources once they're both loaded.
-    public init<L1, L2, C: View>(
-        _ loadable1: L1,
-        _ loadable2: L2,
-        displayRules: [LoadableGroupStatusRule] = [.allData],
-        @ViewBuilder content: @escaping (L1.Content, L2.Content) -> C
-    ) where L1: Loadable, L2: Loadable, DataContent == Group<C?> {
-        self.init([loadable1, loadable2], displayRules: displayRules) {
-            Group {
-                if let v1 = loadable1.state.content, let v2 = loadable2.state.content {
-                    content(v1, v2)
-                }
-            }
-        }
-    }
+    /**
+     By default, the content will be rendered as soon as any of the resources has data.
 
-    /// Displays the content of all resources once they're all loaded.
-    public init<L1, L2, L3, C: View>(
-        _ loadable1: L1,
-        _ loadable2: L2,
-        _ loadable3: L3,
-        displayRules: [LoadableGroupStatusRule] = [.allData],
-        @ViewBuilder content: @escaping (L1.Content, L2.Content, L3.Content) -> C
-    ) where L1: Loadable, L2: Loadable, L3: Loadable, DataContent == Group<C?> {
-        self.init([loadable1, loadable2, loadable3], displayRules: displayRules) {
-            Group {
-                if let v1 = loadable1.state.content, let v2 = loadable2.state.content, let v3 = loadable3.state.content {
-                    content(v1, v2, v3)
-                }
-            }
-        }
-    }
+     Note the only difference between this initialiser and the other is the optionality
+     of the parameters to the content block.
 
-    public init(_ loadables: [any Loadable], displayRules: [LoadableGroupStatusRule], dataContent: @escaping () -> DataContent) {
-        self.loadables = loadables
-        self.dataContent = dataContent
-        model = LoadableGroupStatusModel(loadables, rules: displayRules)
+     See `LoadableGroupStatusRule` for an explanation of displayRules. Note that the
+     difference between [.anyData] (the default) and [.alwaysData] is that in the latter case
+     your content will be rendered even when no resources have data.
+
+     Note that using `.allData` doesn't really make sense in this context.
+     */
+    public init<each R: Loadable>(
+        _ loadables: repeat each R,
+        displayRules: [LoadableGroupStatusRule] = [.anyData],
+        @ViewBuilder content: @escaping (repeat (each R).Content?) -> ContentView
+    ) {
+        self.loadables = [any Loadable]()
+        _ = (repeat self.loadables.append((each loadables)))
+
+        model = LoadableGroupStatusModel(self.loadables, rules: displayRules)
+
+        contentView = {
+            content(repeat (each loadables).state.content)
+        }
     }
 
     @ViewBuilder public var body: some View {
@@ -101,14 +92,14 @@ public struct ResourceView<DataContent: View>: View {
                 )
 
             case .data:
-                dataContent()
+                contentView()
 
             case nil:
                 EmptyView()
         }
     }
 
-    /// Calls loadIfNeeded() on all resources
+    /// Calls loadIfNeeded() on all reloadable resources
     public func tryAgain() {
         loadables.forEach {
             if $0.isReloadable {
@@ -118,31 +109,45 @@ public struct ResourceView<DataContent: View>: View {
     }
 }
 
+fileprivate extension Optional {
+    func throwingUnwrap() throws -> Wrapped {
+        switch self {
+            case .some(let v): return v
+            case .none: throw MissingValue()
+        }
+    }
+
+    struct MissingValue: Error {}
+}
+
+fileprivate extension Array where Element == LoadableGroupStatusRule {
+    static let favourData = [LoadableGroupStatusRule.anyData, .loading, .error]
+}
 
 #Preview("Error") {
     previewContainer {
         let error = RequestError(response: nil, content: nil, cause: nil, userMessage: "Something really didn't work out, I'm sorry to say")
-        return ResourceView([TypedResource<String>.fakeFailure(error)], displayRules: .standard) { EmptyView() }
+        return ResourceView(TypedResource<String>.fakeFailure(error), displayRules: .favourData) { _ in EmptyView() }
     }
 }
 
 #Preview("Loading") {
     previewContainer {
-        ResourceView([TypedResource<String>.fakeLoading()], displayRules: .standard) { EmptyView() }
+        ResourceView(TypedResource<String>.fakeLoading(), displayRules: .favourData) { _ in EmptyView() }
     }
 }
 
 #Preview("Custom error") {
     previewContainer {
         let error = RequestError(response: nil, content: nil, cause: nil, userMessage: "Something really didn't work out, I'm sorry to say")
-        return ResourceView([TypedResource<String>.fakeFailure(error)], displayRules: .standard) { EmptyView() }
+        return ResourceView(TypedResource<String>.fakeFailure(error), displayRules: .favourData) { _ in EmptyView() }
             .resourceViewStyle(GarishResourceViewStyle())
     }
 }
 
 #Preview("Custom loading") {
     previewContainer {
-        ResourceView([TypedResource<String>.fakeLoading()], displayRules: .standard) { EmptyView() }
+        ResourceView(TypedResource<String>.fakeLoading(), displayRules: .favourData) { _ in EmptyView() }
             .resourceViewStyle(GarishResourceViewStyle())
     }
 }

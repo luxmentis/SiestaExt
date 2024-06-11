@@ -12,7 +12,7 @@ struct PostsView: View {
 
     var body: some View {
         NavigationStack {
-            ResourceView(api.posts(), displayRules: .standard) {
+            ResourceView(api.posts(), displayRules: [.allData, .loading, .error]) {
                 List($0) {
                     NavigationLink($0.title, destination: PostView(post: $0))
                 }

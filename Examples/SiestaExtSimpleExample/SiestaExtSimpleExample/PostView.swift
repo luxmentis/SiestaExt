@@ -14,8 +14,8 @@ struct PostView: View {
     }
 
     var body: some View {
-        ResourceView(fakeUser ?? api.user(id: post.userId), displayRules: .standard) { (user: User) in
-            VStack {
+        ResourceView(fakeUser ?? api.user(id: post.userId), displayRules: [.allData, .loading, .error]) { (user: User) in
+            VStack(alignment: .leading) {
                 VStack(alignment: .leading, spacing: 20) {
                     Text(post.title).font(.title)
                     Text(post.body).font(.body)
@@ -23,7 +23,7 @@ struct PostView: View {
                 }
                 .padding()
 
-                ResourceView(fakeComments ?? api.comments(postId: post.id), displayRules: .standard) {
+                ResourceView(fakeComments ?? api.comments(postId: post.id), displayRules: [.allData, .loading, .error]) {
                     List($0) { comment in
                         VStack(alignment: .leading) {
                             Text(comment.body)
