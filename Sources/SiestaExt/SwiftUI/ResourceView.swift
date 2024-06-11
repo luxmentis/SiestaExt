@@ -18,10 +18,10 @@ import Siesta
  */
 @MainActor
 public struct ResourceView<DataContent: View>: View {
-    public var dataContent: () -> DataContent
-    public var loadables: [any Loadable]
-    @ObservedObject public var model: LoadableGroupStatusModel
-    @Environment(\.resourceViewStyle) var style
+    private var dataContent: () -> DataContent
+    private var loadables: [any Loadable]
+    @ObservedObject private var model: LoadableGroupStatusModel
+    @Environment(\.resourceViewStyle) private var style
 
     /// Displays the content of the resource if it's loaded, otherwise nothing unless you supply statusDisplay.
     public init<L, C: View>(

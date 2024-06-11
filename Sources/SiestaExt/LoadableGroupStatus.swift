@@ -12,7 +12,7 @@ public class LoadableGroupStatusModel: ObservableObject {
     }
 }
 
-public enum LoadableGroupStatusRule: String {
+public enum LoadableGroupStatusRule: String, Sendable {
     /// If `isLoading` is true for any observed resources, enter the **loading** state.
     case loading
 
