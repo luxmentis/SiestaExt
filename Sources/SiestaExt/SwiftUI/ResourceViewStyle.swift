@@ -1,6 +1,12 @@
 import SwiftUI
 import Siesta
 
+/**
+ Implement this if you want to build your own loading and error views for ResourceView. The methods
+ have default implementations, so you can implement one or both.
+ 
+ Adopt your new style with the view modifier resourceViewStyle().
+ */
 public protocol ResourceViewStyle: Sendable {
     associatedtype LoadingView: View
     associatedtype ErrorView: View
@@ -14,7 +20,6 @@ public protocol ResourceViewStyle: Sendable {
 
 public extension ResourceViewStyle {
 
-    @ViewBuilder
     func loadingView() -> some View {
         VStack {
             ProgressView()
@@ -22,7 +27,6 @@ public extension ResourceViewStyle {
         .frame(maxWidth: .infinity)
     }
 
-    @ViewBuilder
     func errorView(errorMessage: String, canTryAgain: Bool, tryAgain: @escaping () -> Void) -> some View {
         VStack(spacing: 20) {
             Text(errorMessage)
@@ -57,7 +61,7 @@ public extension ResourceViewStyle where Self == DefaultResourceViewStyle {
     static var defaultStyle: DefaultResourceViewStyle { DefaultResourceViewStyle() }
 }
 
-public extension EnvironmentValues {
+extension EnvironmentValues {
     var resourceViewStyle: any ResourceViewStyle {
         get { self[ResourceViewStyleKey.self] }
         set { self[ResourceViewStyleKey.self] = newValue }

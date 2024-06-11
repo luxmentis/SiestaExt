@@ -7,14 +7,13 @@ import Siesta
  control the relative priorities of these.
 
  See the example apps for examples of how to use this, including in previews.
+ 
+ To build your own loading view and/or error view, implement your own `ResourceViewStyle` and adopt it
+ with the view modifier `resourceViewStyle()`.
 
  Although originally built for Siesta resources, it's more generally useful - parts of your app might get
  data from places other than Siesta, and you can use it for anything that's Loadable. See Loadable for
  further discussion about that.
-
- You might wish to implement the rendering of status information yourself, in which case you should write
- your own version of this struct. You won't have much code to write as most of the useful functionality
- is factored out, so you get to reuse it. Just copy this implementation to get started.
  */
 @MainActor
 public struct ResourceView<DataContent: View>: View {
