@@ -17,50 +17,11 @@ import Siesta
  is factored out, so you get to reuse it. Just copy this implementation to get started.
  */
 @MainActor
-public struct ResourceView<DataContent: View>: ResourceViewProtocol {
+public struct ResourceView<DataContent: View>: View {
     public var dataContent: () -> DataContent
     public var loadables: [any Loadable]
     @ObservedObject public var model: LoadableGroupStatusModel
     @Environment(\.resourceViewStyle) var style
-
-    public init(_ loadables: [any Loadable], displayRules: [LoadableGroupStatusRule], dataContent: @escaping () -> DataContent) {
-        self.loadables = loadables
-        self.dataContent = dataContent
-        model = LoadableGroupStatusModel(loadables, rules: displayRules)
-    }
-
-    @ViewBuilder public var body: some View {
-        switch model.status {
-            case .loading:
-                style.anyLoadingView()
-
-            case .error(let error):
-                style.anyErrorView(
-                    errorMessage: (error as? RequestError)?.userMessage ?? error.localizedDescription,
-                    canTryAgain: loadables.contains(where: { $0.isReloadable }),
-                    tryAgain: tryAgain
-                )
-
-            case .data:
-                dataContent()
-
-            case nil:
-                EmptyView()
-        }
-    }
-}
-
-/// Implement this if writing your own ResourceView. Just copy ResourceView's implementation as a starting point.
-@MainActor
-public protocol ResourceViewProtocol: View {
-    associatedtype DataContent: View
-
-    var dataContent: () -> DataContent { get set }
-    var loadables: [any Loadable] { get set }
-    init(_ loadables: [any Loadable], displayRules: [LoadableGroupStatusRule], dataContent: @escaping () -> DataContent)
-}
-
-extension ResourceViewProtocol {
 
     /// Displays the content of the resource if it's loaded, otherwise nothing unless you supply statusDisplay.
     public init<L, C: View>(
@@ -119,6 +80,32 @@ extension ResourceViewProtocol {
                     content(v1, v2, v3)
                 }
             }
+        }
+    }
+
+    public init(_ loadables: [any Loadable], displayRules: [LoadableGroupStatusRule], dataContent: @escaping () -> DataContent) {
+        self.loadables = loadables
+        self.dataContent = dataContent
+        model = LoadableGroupStatusModel(loadables, rules: displayRules)
+    }
+
+    @ViewBuilder public var body: some View {
+        switch model.status {
+            case .loading:
+                style.anyLoadingView()
+
+            case .error(let error):
+                style.anyErrorView(
+                    errorMessage: (error as? RequestError)?.userMessage ?? error.localizedDescription,
+                    canTryAgain: loadables.contains(where: { $0.isReloadable }),
+                    tryAgain: tryAgain
+                )
+
+            case .data:
+                dataContent()
+
+            case nil:
+                EmptyView()
         }
     }
 
