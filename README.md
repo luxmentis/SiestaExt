@@ -152,10 +152,46 @@ to `[.anyData, .loading, .error]`
 
 ### But possibly you want to render progress and errors yourself
 
-This is easy – just write your own version of `ResourceView`. That sounds
-onerous, but in fact you have very little code to write – most of the
-mechanics is farmed out to a protocol and a helper class. Just have a look at
-the main implementation of `ResourceView`.
+Implement your own `ResourceViewStyle`, and adopt it with the view modifier `resourceViewStyle()`
+at the appropriate place(s) in your view hierarchy.
+
+```swift
+struct GarishResourceViewStyle: ResourceViewStyle {
+
+    // You can implement either or both of these methods
+
+    func loadingView() -> some View {
+        Text("Waiting....")
+            .font(.title2)
+            .foregroundStyle(Color.purple)
+    }
+
+    func errorView(errorMessage: String, canTryAgain: Bool, tryAgain: @escaping () -> Void) -> some View {
+        Text(errorMessage)
+            .font(.title2)
+            .foregroundStyle(Color.mint)
+
+        if canTryAgain {
+            Button("Try again", action: tryAgain)
+                .buttonStyle(.borderedProminent)
+                .foregroundStyle(Color.yellow)
+        }
+    }
+}
+
+...
+
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .resourceViewStyle(GarishResourceViewStyle())
+        }
+    }
+}
+
+```
 
 
 ### Multiple resources, either all at once...

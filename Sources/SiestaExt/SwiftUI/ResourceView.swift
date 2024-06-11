@@ -21,6 +21,7 @@ public struct ResourceView<DataContent: View>: ResourceViewProtocol {
     public var dataContent: () -> DataContent
     public var loadables: [any Loadable]
     @ObservedObject public var model: LoadableGroupStatusModel
+    @Environment(\.resourceViewStyle) var style
 
     public init(_ loadables: [any Loadable], displayRules: [LoadableGroupStatusRule], dataContent: @escaping () -> DataContent) {
         self.loadables = loadables
@@ -31,26 +32,14 @@ public struct ResourceView<DataContent: View>: ResourceViewProtocol {
     @ViewBuilder public var body: some View {
         switch model.status {
             case .loading:
-                VStack {
-                    ProgressView()
-                }
-                .frame(maxWidth: .infinity)
+                style.anyLoadingView()
 
             case .error(let error):
-                VStack(spacing: 20) {
-                    // You'd think RequestError would return userMessage for localizedDescription, but it doesn't.
-                    Text((error as? RequestError)?.userMessage ?? error.localizedDescription)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.red)
-                    .frame(maxWidth: 300)
-
-                    if loadables.contains(where: { $0.isReloadable }) {
-                        Button("Try again") {
-                            tryAgain()
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
+                style.anyErrorView(
+                    errorMessage: (error as? RequestError)?.userMessage ?? error.localizedDescription,
+                    canTryAgain: loadables.contains(where: { $0.isReloadable }),
+                    tryAgain: tryAgain
+                )
 
             case .data:
                 dataContent()
@@ -154,6 +143,41 @@ extension ResourceViewProtocol {
 #Preview("Loading") {
     previewContainer {
         ResourceView([TypedResource<String>.fakeLoading()], displayRules: .standard) { EmptyView() }
+    }
+}
+
+#Preview("Custom error") {
+    previewContainer {
+        let error = RequestError(response: nil, content: nil, cause: nil, userMessage: "Something really didn't work out, I'm sorry to say")
+        return ResourceView([TypedResource<String>.fakeFailure(error)], displayRules: .standard) { EmptyView() }
+            .resourceViewStyle(GarishResourceViewStyle())
+    }
+}
+
+#Preview("Custom loading") {
+    previewContainer {
+        ResourceView([TypedResource<String>.fakeLoading()], displayRules: .standard) { EmptyView() }
+            .resourceViewStyle(GarishResourceViewStyle())
+    }
+}
+
+fileprivate struct GarishResourceViewStyle: ResourceViewStyle {
+    func loadingView() -> some View {
+        Text("Waiting....")
+            .font(.title2)
+            .foregroundStyle(Color.purple)
+    }
+
+    func errorView(errorMessage: String, canTryAgain: Bool, tryAgain: @escaping () -> Void) -> some View {
+        Text(errorMessage)
+            .font(.title2)
+            .foregroundStyle(Color.mint)
+
+        if canTryAgain {
+            Button("Try again", action: tryAgain)
+                .buttonStyle(.borderedProminent)
+                .foregroundColor(Color.yellow)
+        }
     }
 }
 
