@@ -42,7 +42,7 @@ func repository(ownedBy login: String, named name: String) -> TypedResource<Repo
     .resource("/repos")
     .child(login)
     .child(name)
-    .typed() // Create a TypedResource from a Resource. Type inference usually figures out <T>.
+    .typed() // Create a TypedResource from a Resource. Type inference usually figures out T.
 }
 ```
 
@@ -121,7 +121,8 @@ struct StatusSampleView: View {
             Text("\(owner)/\(repoName)")
             .font(.title)
 
-            ResourceView(GitHubAPI.repository(ownedBy: owner, named: repoName), /* Added this bit: */ displayRules: .standard) { (repo:
+            ResourceView(GitHubAPI.repository(ownedBy: owner, named: repoName), /* Added this bit: */ displayRules: [.loading,
+.error, .anyData]) { (repo:
                 Repository) in
                 if let starCount = repo.starCount {
                     Text("★ \(starCount)")
@@ -145,9 +146,6 @@ way: with the array of rules you pass. For
 example, to
 display data, no matter how stale: `displayRules: [.anyData, .loading,
 .error]`.
-
-There are a few predefined sets like `.standard` (used above), which is short for
-to `[.anyData, .loading, .error]`
 
 
 ### But possibly you want to render progress and errors yourself
