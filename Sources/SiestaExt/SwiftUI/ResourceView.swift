@@ -151,17 +151,16 @@ fileprivate struct GarishResourceViewStyle: ResourceViewStyle {
     func loadingView() -> some View {
         Text("Waiting....")
             .font(.title2)
-            .foregroundStyle(Color.purple)
+            .foregroundColor(Color.purple)
     }
 
     func errorView(errorMessage: String, canTryAgain: Bool, tryAgain: @escaping () -> Void) -> some View {
         Text(errorMessage)
             .font(.title2)
-            .foregroundStyle(Color.mint)
+            .foregroundColor(Color.green)
 
         if canTryAgain {
             Button("Try again", action: tryAgain)
-                .buttonStyle(.borderedProminent)
                 .foregroundColor(Color.yellow)
         }
     }
@@ -179,5 +178,4 @@ fileprivate struct GarishResourceViewStyle: ResourceViewStyle {
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding()
-    .buttonStyle(.borderedProminent)
 }
