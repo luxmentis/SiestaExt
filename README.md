@@ -197,8 +197,8 @@ struct MyApp: App {
 ### Multiple resources, either all at once...
 
 Your content block can use more than one resource, and will be displayed once they
-all have content. Particularly useful if you're intertwining content from multiple
-resources.
+all have content (or sooner, depending on the variant you choose). Particularly useful
+if you're intertwining content from multiple resources.
 
 ```swift
 struct MultipleSampleView: View {
