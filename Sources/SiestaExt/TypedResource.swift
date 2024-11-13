@@ -137,7 +137,7 @@ public class TypedResource<T>: Loadable, ObservableObject, Equatable, Hashable, 
 /// Fakes
 public extension TypedResource {
     /// A resource with fake data for use in previews. Also available on Optional<TypedResource> as chances are you're passing an optional to your View.
-    static func fake(_ content: T?) -> TypedResource<T> { .init(fake: content) }
+    static func fake(_ content: T?) -> TypedResource { .init(fake: content) }
 
     /// A fake resource in error state for use in previews. Also available on Optional<TypedResource> as chances are you're passing an optional to your View.
     static func fakeFailure(_ error: RequestError) -> TypedResource<T> { .init(fakeState: .fakeFailure(error)) }
@@ -154,6 +154,27 @@ public extension TypedResource {
     convenience init(fakeState: ResourceState<T>) {
         self.init(resource: nil, state: fakeState)
     }
+
+	static func fake<P: Publisher>(_ fakePublisher: P) -> TypedResource<T> where P.Output == T? {
+		let res = TypedResource(fakeState: .fakeContent(nil))
+
+		fakePublisher
+        .ignoreFailure()
+		.map { ResourceState.fakeContent($0) }
+		.assign(to: &res.$state)
+
+		return res
+	}
+
+	static func fakeState<P: Publisher>(_ fakePublisher: P) -> TypedResource<T> where P.Output == ResourceState<T> {
+		let res = TypedResource(fakeState: .fakeContent(nil))
+
+		fakePublisher
+        .ignoreFailure()
+		.assign(to: &res.$state)
+
+		return res
+	}
 }
 
 public extension Optional {

@@ -15,6 +15,7 @@ import Siesta
  data from places other than Siesta, and you can use it for anything that's Loadable. See Loadable for
  further discussion about that.
  */
+ // todo If the resource is an ObservedObject (rather than e.g. a computed property) there's a flash on every api fetch (double flash in fact). Not sure if there's anything we can do about that, and it should(?) be unnecessary (but perhaps this is too restrictive). At least (1) look for it in the sample code and fix and (2) advise against this.
 @MainActor
 public struct ResourceView<ContentView: View>: View {
     private var contentView: () -> ContentView
